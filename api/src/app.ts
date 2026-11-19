@@ -1,15 +1,18 @@
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import type { DatabaseSync } from 'node:sqlite';
 import { lireVersion } from './version.ts';
+import { creerRouteTirage } from './routes/tirage.ts';
+import { ouvrirSessionGmail, type OuvrirSessionEnvoi } from './tirage/envoiGmail.ts';
 
 /**
  * L'application Express : routes sous /api, réponses JSON. Une route par fichier
  * `src/routes/<domaine>.ts` (voir AGENTS.md), branchée ici.
  */
-export function creerApp(base: DatabaseSync): Express {
+export function creerApp(base: DatabaseSync, ouvrirSessionEnvoi: OuvrirSessionEnvoi = ouvrirSessionGmail): Express {
   const app = express();
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '100kb' }));
+  app.use(express.json({ limit: '1mb' }));
+  app.use('/api', creerRouteTirage(ouvrirSessionEnvoi));
 
   app.get(['/__version__', '/api/__version__'], (_requete, reponse) => {
     reponse.set('Cache-Control', 'no-store').json(lireVersion());
