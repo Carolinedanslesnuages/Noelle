@@ -12,4 +12,4 @@
 | Lancer le front | `cd front && npm run dev` |
 
 ## Stories réalisées
-_(aucune pour l'instant)_
+- #1 (demande libre) — Tirage secret santa : import d'un CSV, tirage, envoi d'un mail à chaque participant via Gmail. Fiche : `revues/libre-1-realiser-un-tirage-secret.md`.
