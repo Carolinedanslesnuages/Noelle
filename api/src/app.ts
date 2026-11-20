@@ -8,7 +8,10 @@ import { ouvrirSessionGmail, type OuvrirSessionEnvoi } from './tirage/envoiGmail
  * L'application Express : routes sous /api, réponses JSON. Une route par fichier
  * `src/routes/<domaine>.ts` (voir AGENTS.md), branchée ici.
  */
-export function creerApp(base: DatabaseSync, ouvrirSessionEnvoi: OuvrirSessionEnvoi = ouvrirSessionGmail): Express {
+export function creerApp(
+  base: DatabaseSync | undefined,
+  ouvrirSessionEnvoi: OuvrirSessionEnvoi = ouvrirSessionGmail,
+): Express {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
@@ -19,6 +22,10 @@ export function creerApp(base: DatabaseSync, ouvrirSessionEnvoi: OuvrirSessionEn
   });
 
   app.get('/api', (_requete, reponse) => {
+    if (!base) {
+      reponse.json({ statut: 'ok' });
+      return;
+    }
     const migrations = base.prepare('SELECT COUNT(*) AS nombre FROM migrations').get();
     reponse.json({ statut: 'ok', migrations: Number(migrations?.nombre ?? 0) });
   });
