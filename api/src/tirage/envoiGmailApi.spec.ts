@@ -49,9 +49,9 @@ describe('creerOuvertureSessionGmailApi', () => {
     const appeler = vi.fn<typeof fetch>().mockResolvedValueOnce(reponseJeton()).mockResolvedValueOnce(new Response('{}', { status: 200 }));
     const session = await creerOuvertureSessionGmailApi(CONFIGURATION, appeler)('', '');
     await session.envoyer(MAIL);
-    const [adresse, options] = appeler.mock.calls[1] ?? [];
-    expect(String(adresse)).toContain('gmail.googleapis.com');
-    expect((options?.headers as Record<string, string>).Authorization).toBe('Bearer acces');
+    const appelEnvoi = appeler.mock.calls[1];
+    expect(appelEnvoi?.[0]).toContain('gmail.googleapis.com');
+    expect(appelEnvoi?.[1]?.headers).toMatchObject({ Authorization: 'Bearer acces' });
   });
 
   it('jeton refusé : ConnexionRefuseeError, aucun envoi tenté', async () => {
