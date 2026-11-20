@@ -1,4 +1,3 @@
-import nodemailer from 'nodemailer';
 import type { MailAEnvoyer } from './messageMail.ts';
 
 export interface SessionEnvoi {
@@ -28,6 +27,9 @@ const CONNEXIONS_GMAIL = [
 ];
 
 export const ouvrirSessionGmail: OuvrirSessionEnvoi = async (expediteur, motDePasseApplication) => {
+  // Chargé seulement ici : sur Vercel (envoi par l'API Gmail), cette bibliothèque ne doit pas
+  // pouvoir faire échouer le démarrage de la fonction.
+  const { default: nodemailer } = await import('nodemailer');
   for (const { port, secure } of CONNEXIONS_GMAIL) {
     const transport = nodemailer.createTransport({
       host: 'smtp.gmail.com',
