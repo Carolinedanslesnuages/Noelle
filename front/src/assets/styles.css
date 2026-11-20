@@ -4,7 +4,7 @@
   --accent: #166534;
   --rouge-noel: #8c1c13;
   --vert-noel: #166534;
-  --creme: #fff8ee;
+  --creme: #faf6f0;
   --or: #f2c14e;
   --erreur: #b42318;
   --succes: #166534;
@@ -13,7 +13,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   line-height: 1.5;
   color: var(--texte);
   background: var(--creme);
@@ -25,7 +25,6 @@ h2 {
 }
 
 .intro-noel {
-  font-style: italic;
   color: var(--vert-noel);
 }
 
@@ -43,33 +42,45 @@ h2 {
 
 .entete,
 .pied {
-  padding: 1rem;
-  background: var(--rouge-noel);
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #0f3d2e, #14573f);
   color: #ffffff;
-  text-align: center;
+}
+.entete-titre {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+.entete-sous-titre {
+  color: var(--or);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 .entete {
-  border-bottom: 6px solid var(--vert-noel);
-  font-size: 1.5rem;
-}
-.entete p,
-.pied p {
-  margin: 0;
+  border-bottom: 3px solid var(--rouge-noel);
 }
 .pied {
-  border-top: 6px solid var(--vert-noel);
+  margin-top: 2rem;
+  font-size: 0.875rem;
+  text-align: center;
 }
-
-.contenu {
-  background: #ffffff;
-  border-left: 4px dashed var(--or);
-  border-right: 4px dashed var(--or);
+.pied p {
+  margin: 0;
 }
 
 .contenu {
   max-width: 40rem;
-  margin: 0 auto;
-  padding: 1.5rem 1rem;
+  margin: 1.5rem auto 0;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #eadfd0;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgb(15 61 46 / 10%);
 }
 
 .champ {
@@ -91,6 +102,7 @@ h2 {
   margin-top: 0.25rem;
   padding: 0.5rem;
   border: 1px solid var(--bordure);
+  border-radius: 0.5rem;
   font: inherit;
 }
 .champ .message-erreur {
@@ -115,6 +127,7 @@ summary {
 button[type='submit'] {
   padding: 0.6rem 1.2rem;
   border: 2px solid var(--accent);
+  border-radius: 2rem;
   background: var(--accent);
   color: #ffffff;
   font: inherit;

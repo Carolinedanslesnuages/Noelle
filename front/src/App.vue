@@ -5,12 +5,12 @@ import { RouterView } from 'vue-router'
 <template>
   <a class="lien-evitement" href="#contenu">Aller au contenu</a>
   <header class="entete">
-    <p class="entete-titre"><span aria-hidden="true">🎄</span> <strong>Noëlle</strong> <span aria-hidden="true">🎁</span></p>
+    <p class="entete-titre"><strong>Noëlle</strong><span class="entete-sous-titre">Secret Santa</span></p>
   </header>
   <main id="contenu" class="contenu">
     <RouterView />
   </main>
   <footer class="pied">
-    <p><span aria-hidden="true">❄️</span> Noëlle — tirage au sort du Secret Santa <span aria-hidden="true">❄️</span></p>
+    <p>Noëlle — tirage au sort du Secret Santa</p>
   </footer>
 </template>
