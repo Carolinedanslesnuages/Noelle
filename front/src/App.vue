@@ -5,7 +5,7 @@ import { RouterView } from 'vue-router'
 <template>
   <a class="lien-evitement" href="#contenu">Aller au contenu</a>
   <header class="entete">
-    <p><strong>Noëlle</strong></p>
+    <p class="entete-titre"><strong>Noëlle</strong><span class="entete-sous-titre">Le service de Secret Santa</span></p>
   </header>
   <main id="contenu" class="contenu">
     <RouterView />

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import BulleNoelle from '@/components/BulleNoelle.vue'
 import { lancerTirage, type ResultatTirage } from '@/services/tirage'
 
 const expediteur = ref('')
@@ -58,7 +59,13 @@ async function lancer() {
 </script>
 
 <template>
-  <h1>Tirage au sort du Secret Santa</h1>
+  <h1>Noëlle — Tirage au sort du Secret Santa</h1>
+  <BulleNoelle grande>
+    <p>
+      <strong>Salut, moi c'est Noëlle !</strong> Je t'aide à faire ton tirage de Noël. Importe tes participants :
+      chacun recevra en secret le nom de la personne à gâter.
+    </p>
+  </BulleNoelle>
 
   <div role="status">
     <div v-if="resultat" class="message message-succes">
@@ -76,9 +83,10 @@ async function lancer() {
   <form novalidate @submit.prevent="lancer">
     <div class="champ" data-testid="fichier-participants">
       <label for="fichier-participants">Fichier CSV des participants (obligatoire)</label>
-      <span id="fichier-participants-aide" class="aide">
-        Colonnes « nom » et « email », puis une colonne par question du questionnaire. Au moins 3 participants.
-      </span>
+      <BulleNoelle id-texte="fichier-participants-aide">
+        Mets ici ton fichier CSV : colonnes « nom » et « email », puis une colonne par question du questionnaire.
+        Il me faut au moins 3 participants !
+      </BulleNoelle>
       <input
         id="fichier-participants"
         type="file"
@@ -95,10 +103,10 @@ async function lancer() {
     <p v-if="nomFichier">Fichier choisi : {{ nomFichier }}</p>
 
     <div class="champ" data-testid="adresse-gmail">
-      <label for="adresse-gmail">Votre adresse Gmail (obligatoire)</label>
-      <span id="adresse-gmail-aide" class="aide">
-        Les mails partiront de cette adresse. Ils resteront visibles dans son dossier « Envoyés ».
-      </span>
+      <label for="adresse-gmail">Ton adresse Gmail (obligatoire)</label>
+      <BulleNoelle id-texte="adresse-gmail-aide">
+        C'est de cette adresse que partiront mes mails. Tu les retrouveras dans son dossier « Envoyés ».
+      </BulleNoelle>
       <input
         id="adresse-gmail"
         v-model="expediteur"
@@ -114,10 +122,10 @@ async function lancer() {
     </div>
 
     <div class="champ" data-testid="mot-de-passe-application">
-      <label for="mot-de-passe-application">Mot de passe d'application Gmail (obligatoire)</label>
-      <span id="mot-de-passe-application-aide" class="aide">
-        Ce n'est pas votre mot de passe Gmail habituel. Il n'est jamais enregistré.
-      </span>
+      <label for="mot-de-passe-application">Ton mot de passe d'application Gmail (obligatoire)</label>
+      <BulleNoelle id-texte="mot-de-passe-application-aide">
+        Ce n'est pas ton mot de passe Gmail habituel. Promis, je ne le garde jamais !
+      </BulleNoelle>
       <input
         id="mot-de-passe-application"
         v-model="motDePasseApplication"
@@ -135,12 +143,12 @@ async function lancer() {
     </div>
 
     <details id="aide-mot-de-passe">
-      <summary>Comment obtenir un mot de passe d'application ?</summary>
+      <summary>Noëlle t'explique : comment obtenir un mot de passe d'application ?</summary>
       <ol>
-        <li>Activez la validation en deux étapes sur votre compte Google.</li>
-        <li>Dans votre compte Google, cherchez « Mots de passe des applications ».</li>
-        <li>Créez-en un, nommé par exemple « Secret Santa ».</li>
-        <li>Copiez les 16 caractères obtenus dans le champ ci-dessus.</li>
+        <li>Active la validation en deux étapes sur ton compte Google.</li>
+        <li>Dans ton compte Google, cherche « Mots de passe des applications ».</li>
+        <li>Crées-en un, nommé par exemple « Secret Santa ».</li>
+        <li>Copie les 16 caractères obtenus dans le champ ci-dessus.</li>
       </ol>
     </details>
 
