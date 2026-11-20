@@ -12,11 +12,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  // Le DSFR contient des media queries réservées à Internet Explorer (min-width:0\0)
-  // que le minificateur refuse : on les ignore.
-  css: {
-    lightningcss: { errorRecovery: true },
-  },
   server: {
     proxy: {
       '/api': 'http://localhost:3000',

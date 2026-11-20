@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
-import VueDsfr from '@gouvminint/vue-dsfr'
 import HomeView from '../HomeView.vue'
 import { violationsAccessibilite } from '@/__tests__/accessibilite'
 
@@ -11,7 +10,7 @@ const CHAMP_MOT_DE_PASSE = '[data-testid="mot-de-passe-application"] input'
 
 let wrapper: VueWrapper
 const monter = () => {
-  wrapper = mount(HomeView, { global: { plugins: [VueDsfr] }, attachTo: document.body })
+  wrapper = mount(HomeView, { attachTo: document.body })
   return wrapper
 }
 

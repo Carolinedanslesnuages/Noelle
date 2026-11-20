@@ -7,7 +7,7 @@
 
 ## Contexte
 Noëlle est une application qui permet graçe à l'import d'un csv de faire un couplage pour le secret santa. une fois le tirage fait , elle envoi un mail a chacun pour lui divulguer qui elle devra gâter. Le projet démarre comme POC réalisé par un PO avec un assistant de code ; seules
-les stacks d'ADA sont autorisées. L'interface respecte le DSFR.
+les stacks d'ADA sont autorisées. L'interface n'utilise plus le DSFR (retiré : surdimensionné pour le besoin) ; elle reste conforme au RGAA.
 
 ## Options considérées
 ### Option A — Vue 3 + Node.js (Express) + SQLite
