@@ -96,7 +96,7 @@ async function lancer() {
     <div class="champ" data-testid="fichier-participants">
       <label for="fichier-participants">Fichier CSV des participants (obligatoire)</label>
       <BulleNoelle id-texte="fichier-participants-aide">
-        Mets ici ton fichier CSV : colonnes « nom » et « email », puis une colonne par question du questionnaire.
+        Mets ici ton fichier CSV, par exemple l’export des réponses de ton formulaire Google : une colonne « email » (ou « Adresse e-mail »), une colonne « nom » si tu en as une, puis une colonne par question.
         Il me faut au moins 3 participants !
       </BulleNoelle>
       <input
