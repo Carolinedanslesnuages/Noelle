@@ -58,7 +58,7 @@ async function lancer() {
 </script>
 
 <template>
-  <h1>Tirage au sort du Secret Santa</h1>
+  <h1>Noëlle — Tirage au sort du Secret Santa</h1>
   <p class="intro-noel">Importez vos participants : chacun recevra en secret le nom de la personne à gâter.</p>
 
   <div role="status">
