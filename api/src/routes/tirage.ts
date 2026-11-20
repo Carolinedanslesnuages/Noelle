@@ -77,6 +77,9 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identif
       throw erreur;
     }
 
+    // Image de Noëlle pour le mail HTML : servie par ce même site (front/public/noelle-mail.png).
+    const protocole = requete.get('x-forwarded-proto')?.split(',')[0]?.trim() ?? requete.protocol;
+    const adresseImageNoelle = `${protocole}://${requete.get('host') ?? 'localhost'}/noelle-mail.png`;
     const duos = tirerAuSort(participants.length);
     // Envoi en parallèle : sur Vercel, la réponse doit partir en quelques secondes.
     const envois = await Promise.all(
@@ -85,7 +88,7 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identif
         const personneGatee = participants[receveur];
         if (personneQuiOffre === undefined || personneGatee === undefined) return false;
         try {
-          await session.envoyer(composerMail(personneQuiOffre, personneGatee));
+          await session.envoyer(composerMail(personneQuiOffre, personneGatee, adresseImageNoelle));
           return true;
         } catch {
           // Échec d'un mail : compté seulement, sans nom ni détail.
