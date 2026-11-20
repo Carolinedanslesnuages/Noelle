@@ -58,7 +58,8 @@ async function lancer() {
 </script>
 
 <template>
-  <h1>Tirage au sort du Secret Santa</h1>
+  <h1><span aria-hidden="true">🎅</span> Tirage au sort du Secret Santa</h1>
+  <p class="intro-noel">Que la magie de Noël opère : chacun saura bientôt qui il va gâter !</p>
 
   <div role="status">
     <div v-if="resultat" class="message message-succes">

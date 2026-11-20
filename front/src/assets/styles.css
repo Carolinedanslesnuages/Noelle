@@ -1,7 +1,11 @@
 :root {
   --texte: #1a1a1a;
   --fond: #ffffff;
-  --accent: #1d4ed8;
+  --accent: #166534;
+  --rouge-noel: #8c1c13;
+  --vert-noel: #166534;
+  --creme: #fff8ee;
+  --or: #f2c14e;
   --erreur: #b42318;
   --succes: #166534;
   --bordure: #595959;
@@ -12,7 +16,17 @@ body {
   font-family: system-ui, sans-serif;
   line-height: 1.5;
   color: var(--texte);
-  background: var(--fond);
+  background: var(--creme);
+}
+
+h1,
+h2 {
+  color: var(--rouge-noel);
+}
+
+.intro-noel {
+  font-style: italic;
+  color: var(--vert-noel);
 }
 
 .lien-evitement {
@@ -30,11 +44,26 @@ body {
 .entete,
 .pied {
   padding: 1rem;
-  border-bottom: 1px solid var(--bordure);
+  background: var(--rouge-noel);
+  color: #ffffff;
+  text-align: center;
+}
+.entete {
+  border-bottom: 6px solid var(--vert-noel);
+  font-size: 1.5rem;
+}
+.entete p,
+.pied p {
+  margin: 0;
 }
 .pied {
-  border-top: 1px solid var(--bordure);
-  border-bottom: 0;
+  border-top: 6px solid var(--vert-noel);
+}
+
+.contenu {
+  background: #ffffff;
+  border-left: 4px dashed var(--or);
+  border-right: 4px dashed var(--or);
 }
 
 .contenu {
