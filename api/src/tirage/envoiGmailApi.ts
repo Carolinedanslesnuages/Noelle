@@ -27,19 +27,25 @@ function encodageBase64Url(texte: string): string {
   return Buffer.from(texte, 'utf-8').toString('base64url');
 }
 
-/** Message complet (en-têtes + corps UTF-8) au format attendu par l'API Gmail. */
+function partieBase64(typeContenu: string, contenu: string): string[] {
+  return [`Content-Type: ${typeContenu}; charset=UTF-8`, 'Content-Transfer-Encoding: base64', '', Buffer.from(contenu, 'utf-8').toString('base64')];
+}
+
+/** Message complet (en-têtes + corps UTF-8) au format attendu par l'API Gmail ; texte + HTML si le mail en a un. */
 export function construireMessageBrut(expediteur: string, mail: MailAEnvoyer): string {
   const sujetEncode = `=?UTF-8?B?${Buffer.from(mail.sujet, 'utf-8').toString('base64')}?=`;
-  const corpsEncode = Buffer.from(mail.texte, 'utf-8').toString('base64');
+  const enTetes = [`From: ${expediteur}`, `To: ${mail.destinataire}`, `Subject: ${sujetEncode}`, 'MIME-Version: 1.0'];
+  if (mail.html === undefined) return encodageBase64Url([...enTetes, ...partieBase64('text/plain', mail.texte)].join('\r\n'));
+  const frontiere = `noelle-${crypto.randomUUID()}`;
   const message = [
-    `From: ${expediteur}`,
-    `To: ${mail.destinataire}`,
-    `Subject: ${sujetEncode}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: base64',
+    ...enTetes,
+    `Content-Type: multipart/alternative; boundary="${frontiere}"`,
     '',
-    corpsEncode,
+    `--${frontiere}`,
+    ...partieBase64('text/plain', mail.texte),
+    `--${frontiere}`,
+    ...partieBase64('text/html', mail.html),
+    `--${frontiere}--`,
   ].join('\r\n');
   return encodageBase64Url(message);
 }

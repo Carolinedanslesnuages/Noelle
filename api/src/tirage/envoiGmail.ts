@@ -50,7 +50,7 @@ export const ouvrirSessionGmail: OuvrirSessionEnvoi = async (expediteur, motDePa
     }
     return {
       async envoyer(mail) {
-        await transport.sendMail({ from: expediteur, to: mail.destinataire, subject: mail.sujet, text: mail.texte });
+        await transport.sendMail({ from: expediteur, to: mail.destinataire, subject: mail.sujet, text: mail.texte, html: mail.html });
       },
     };
   }
