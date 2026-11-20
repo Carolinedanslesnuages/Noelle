@@ -76,17 +76,52 @@ body {
   letter-spacing: 0.25em;
 }
 
+/* Enveloppe : bordure « par avion », rabat triangulaire et sceau rouge. */
 .contenu {
-  flex: 1;
+  position: relative;
+  flex: none;
   box-sizing: border-box;
   width: calc(100% - 2rem);
   max-width: 40rem;
   margin: 1.5rem auto 0;
-  padding: 2rem 1.75rem;
+  padding: 7rem 1.75rem 2rem;
   background: var(--creme);
-  border-radius: 1.25rem;
-  border-top: 6px solid var(--rouge-noel);
+  border: 10px solid transparent;
+  border-image: repeating-linear-gradient(
+      135deg,
+      var(--rouge-noel) 0 16px,
+      #ffffff 16px 26px,
+      var(--vert-noel) 26px 42px,
+      #ffffff 42px 52px
+    )
+    10;
   box-shadow: 0 20px 50px rgb(0 0 0 / 35%);
+}
+.contenu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5.5rem;
+  background: #efe3cf;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.contenu::after {
+  content: '★' / '';
+  position: absolute;
+  top: 4.2rem;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  margin-left: -1.4rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #c8352c, var(--rouge-noel) 70%);
+  box-shadow: 0 3px 8px rgb(0 0 0 / 35%);
+  color: var(--or);
+  font-size: 1.2rem;
 }
 
 .pied {
