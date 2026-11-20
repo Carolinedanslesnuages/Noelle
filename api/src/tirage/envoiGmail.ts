@@ -33,9 +33,9 @@ export const ouvrirSessionGmail: OuvrirSessionEnvoi = async (expediteur, motDePa
       host: 'smtp.gmail.com',
       port,
       secure,
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 20_000,
+      connectionTimeout: 4_000,
+      greetingTimeout: 4_000,
+      socketTimeout: 8_000,
       auth: { user: expediteur, pass: motDePasseApplication },
     });
     try {
