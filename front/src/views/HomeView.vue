@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import LutineNoelle from '@/components/LutineNoelle.vue'
 import { lancerTirage, type ResultatTirage } from '@/services/tirage'
 
 const expediteur = ref('')
@@ -59,6 +60,7 @@ async function lancer() {
 
 <template>
   <h1>Noëlle — Tirage au sort du Secret Santa</h1>
+  <LutineNoelle />
   <p class="intro-noel">Importez vos participants : chacun recevra en secret le nom de la personne à gâter.</p>
 
   <div role="status">
