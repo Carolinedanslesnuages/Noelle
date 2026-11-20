@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { creerApp } from '../src/app.ts';
 import { ouvrirBase } from '../src/base.ts';
-import { ConnexionRefuseeError, type OuvrirSessionEnvoi } from '../src/tirage/envoiGmail.ts';
+import { ConnexionRefuseeError, GmailInjoignableError, type OuvrirSessionEnvoi } from '../src/tirage/envoiGmail.ts';
 import type { MailAEnvoyer } from '../src/tirage/messageMail.ts';
 
 const CSV = ['nom,email,Couleur préférée', 'Alice,alice@example.org,Bleu', 'Bob,bob@example.org,Vert', 'Chloé,chloe@example.org,Rouge', 'David,david@example.org,Jaune'].join('\n');
@@ -72,6 +72,14 @@ describe('POST /api/tirage', () => {
     const reponse = await request(creerApp(ouvrirBase(':memory:'), refus)).post('/api/tirage').send(DEMANDE).expect(401);
     expect(reponse.body.erreur).toContain("Aucun mail n'est parti");
     expect(mailsEnvoyes).toEqual([]);
+  });
+
+  it('Gmail injoignable : message distinct du refus de mot de passe', async () => {
+    const injoignable: OuvrirSessionEnvoi = async () => {
+      throw new GmailInjoignableError();
+    };
+    const reponse = await request(creerApp(ouvrirBase(':memory:'), injoignable)).post('/api/tirage').send(DEMANDE).expect(502);
+    expect(reponse.body.erreur).toContain('Impossible de joindre Gmail');
   });
 
   it('ne journalise ni n’affiche le mot de passe, même en cas d’erreur inattendue', async () => {

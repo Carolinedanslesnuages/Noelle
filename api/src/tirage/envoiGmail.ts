@@ -15,23 +15,42 @@ export class ConnexionRefuseeError extends Error {
   }
 }
 
-export const ouvrirSessionGmail: OuvrirSessionEnvoi = async (expediteur, motDePasseApplication) => {
-  const transport = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user: expediteur, pass: motDePasseApplication },
-  });
-  try {
-    await transport.verify();
-  } catch {
-    // L'erreur d'origine n'est volontairement pas conservée : elle peut citer les identifiants.
-    transport.close();
-    throw new ConnexionRefuseeError();
+export class GmailInjoignableError extends Error {
+  constructor() {
+    super('Gmail est injoignable');
+    this.name = 'GmailInjoignableError';
   }
-  return {
-    async envoyer(mail) {
-      await transport.sendMail({ from: expediteur, to: mail.destinataire, subject: mail.sujet, text: mail.texte });
-    },
-  };
+}
+
+const CONNEXIONS_GMAIL = [
+  { port: 465, secure: true },
+  { port: 587, secure: false },
+];
+
+export const ouvrirSessionGmail: OuvrirSessionEnvoi = async (expediteur, motDePasseApplication) => {
+  for (const { port, secure } of CONNEXIONS_GMAIL) {
+    const transport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port,
+      secure,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
+      auth: { user: expediteur, pass: motDePasseApplication },
+    });
+    try {
+      await transport.verify();
+    } catch (erreur) {
+      // L'erreur d'origine n'est volontairement pas conservée : elle peut citer les identifiants.
+      transport.close();
+      if ((erreur as { code?: string }).code === 'EAUTH') throw new ConnexionRefuseeError();
+      continue;
+    }
+    return {
+      async envoyer(mail) {
+        await transport.sendMail({ from: expediteur, to: mail.destinataire, subject: mail.sujet, text: mail.texte });
+      },
+    };
+  }
+  throw new GmailInjoignableError();
 };

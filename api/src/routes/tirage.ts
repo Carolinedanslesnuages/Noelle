@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ConnexionRefuseeError, type OuvrirSessionEnvoi } from '../tirage/envoiGmail.ts';
+import { ConnexionRefuseeError, GmailInjoignableError, type OuvrirSessionEnvoi } from '../tirage/envoiGmail.ts';
 import { lireCsvParticipants } from '../tirage/lectureCsv.ts';
 import { composerMail } from '../tirage/messageMail.ts';
 import { tirerAuSort } from '../tirage/tirage.ts';
@@ -58,6 +58,12 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi): Router
       if (erreur instanceof ConnexionRefuseeError) {
         reponse.status(401).json({
           erreur: "Gmail a refusé la connexion. Vérifiez l'adresse et le mot de passe d'application. Aucun mail n'est parti.",
+        });
+        return;
+      }
+      if (erreur instanceof GmailInjoignableError) {
+        reponse.status(502).json({
+          erreur: "Impossible de joindre Gmail depuis le serveur (connexion bloquée ou trop lente). Aucun mail n'est parti. Réessayez plus tard.",
         });
         return;
       }
