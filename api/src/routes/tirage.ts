@@ -78,18 +78,22 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identif
     }
 
     const duos = tirerAuSort(participants.length);
-    let mailsEnvoyes = 0;
-    for (const { donneur, receveur } of duos) {
-      const personneQuiOffre = participants[donneur];
-      const personneGatee = participants[receveur];
-      if (personneQuiOffre === undefined || personneGatee === undefined) continue;
-      try {
-        await session.envoyer(composerMail(personneQuiOffre, personneGatee));
-        mailsEnvoyes++;
-      } catch {
-        // Échec d'un mail : compté seulement, sans nom ni détail.
-      }
-    }
+    // Envoi en parallèle : sur Vercel, la réponse doit partir en quelques secondes.
+    const envois = await Promise.all(
+      duos.map(async ({ donneur, receveur }) => {
+        const personneQuiOffre = participants[donneur];
+        const personneGatee = participants[receveur];
+        if (personneQuiOffre === undefined || personneGatee === undefined) return false;
+        try {
+          await session.envoyer(composerMail(personneQuiOffre, personneGatee));
+          return true;
+        } catch {
+          // Échec d'un mail : compté seulement, sans nom ni détail.
+          return false;
+        }
+      }),
+    );
+    const mailsEnvoyes = envois.filter(Boolean).length;
     reponse.json({ mailsEnvoyes, mailsTotal: participants.length });
   });
 
