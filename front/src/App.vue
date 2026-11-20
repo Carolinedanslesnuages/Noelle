@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-
-const logoText = ['République', 'Française']
 </script>
 
 <template>
-  <DsfrHeader
-    service-title="Noëlle"
-    service-description=""
-    :logo-text="logoText"
-    home-to="/"
-  />
-  <main id="contenu" class="fr-container fr-my-6w">
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete">
+    <p><strong>Noëlle</strong></p>
+  </header>
+  <main id="contenu" class="contenu">
     <RouterView />
   </main>
-  <DsfrFooter :logo-text="logoText" />
+  <footer class="pied">
+    <p>Noëlle — tirage au sort du Secret Santa</p>
+  </footer>
 </template>

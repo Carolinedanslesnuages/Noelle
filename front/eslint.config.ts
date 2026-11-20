@@ -24,9 +24,9 @@ export default defineConfigWithVueTs(
   // Accessibilité vérifiée à l'écriture (images, étiquettes, clavier, ARIA…) : la CI échoue sinon.
   ...pluginVueA11y.configs['flat/recommended'],
   {
-    name: 'app/accessibilite-dsfr',
+    name: 'app/accessibilite-etiquettes',
     rules: {
-      // Le DSFR relie l'étiquette au champ par for/id (conforme RGAA) : l'imbrication n'est pas exigée.
+      // L'étiquette est reliée au champ par for/id (conforme RGAA) : l'imbrication n'est pas exigée.
       'vuejs-accessibility/label-has-for': ['error', { required: { some: ['nesting', 'id'] } }],
     },
   },
