@@ -82,6 +82,21 @@ describe('POST /api/tirage', () => {
     expect(reponse.body.erreur).toContain('Impossible de joindre Gmail');
   });
 
+  it('envoi par l’API Gmail : pas d’adresse ni de mot de passe à fournir, et l’écran le sait', async () => {
+    const mailsEnvoyes: MailAEnvoyer[] = [];
+    const ouvrirSession: OuvrirSessionEnvoi = async () => ({
+      async envoyer(mail: MailAEnvoyer) {
+        mailsEnvoyes.push(mail);
+      },
+    });
+    const app = creerApp(ouvrirBase(':memory:'), ouvrirSession, false);
+    const configuration = await request(app).get('/api/tirage/configuration').expect(200);
+    expect(configuration.body).toEqual({ identifiantsGmailRequis: false });
+    const reponse = await request(app).post('/api/tirage').send({ contenuCsv: CSV }).expect(200);
+    expect(reponse.body).toEqual({ mailsEnvoyes: 4, mailsTotal: 4 });
+    expect(mailsEnvoyes).toHaveLength(4);
+  });
+
   it('ne journalise ni n’affiche le mot de passe, même en cas d’erreur inattendue', async () => {
     const journal = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const casse: OuvrirSessionEnvoi = async () => {

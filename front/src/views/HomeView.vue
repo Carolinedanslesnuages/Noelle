@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import BulleNoelle from '@/components/BulleNoelle.vue'
-import { lancerTirage, type ResultatTirage } from '@/services/tirage'
+import { identifiantsGmailRequis, lancerTirage, type ResultatTirage } from '@/services/tirage'
+
+const demanderIdentifiantsGmail = ref(true)
+onMounted(async () => {
+  demanderIdentifiantsGmail.value = await identifiantsGmailRequis()
+})
 
 const expediteur = ref('')
 const motDePasseApplication = ref('')
@@ -29,11 +34,14 @@ async function choisirFichier(fichiers: FileList) {
 function verifierChamps() {
   erreurs.value = {
     fichier: contenuCsv.value === '' ? 'Importez le fichier CSV des participants.' : undefined,
-    expediteur: /^[^\s@]+@(gmail|googlemail)\.com$/i.test(expediteur.value.trim())
-      ? undefined
-      : 'Saisissez une adresse Gmail valide, par exemple prenom@gmail.com.',
+    expediteur:
+      !demanderIdentifiantsGmail.value || /^[^\s@]+@(gmail|googlemail)\.com$/i.test(expediteur.value.trim())
+        ? undefined
+        : 'Saisissez une adresse Gmail valide, par exemple prenom@gmail.com.',
     motDePasse:
-      motDePasseApplication.value.trim() === '' ? "Saisissez le mot de passe d'application Gmail." : undefined,
+      demanderIdentifiantsGmail.value && motDePasseApplication.value.trim() === ''
+        ? "Saisissez le mot de passe d'application Gmail."
+        : undefined,
   }
   return !erreurs.value.fichier && !erreurs.value.expediteur && !erreurs.value.motDePasse
 }
@@ -43,11 +51,15 @@ async function lancer() {
   if (!verifierChamps()) return
   enCours.value = true
   try {
-    resultat.value = await lancerTirage({
-      expediteur: expediteur.value.trim(),
-      motDePasseApplication: motDePasseApplication.value,
-      contenuCsv: contenuCsv.value,
-    })
+    resultat.value = await lancerTirage(
+      demanderIdentifiantsGmail.value
+        ? {
+            expediteur: expediteur.value.trim(),
+            motDePasseApplication: motDePasseApplication.value,
+            contenuCsv: contenuCsv.value,
+          }
+        : { contenuCsv: contenuCsv.value },
+    )
     erreurs.value = {}
   } catch (erreur) {
     erreurs.value = { general: erreur instanceof Error ? erreur.message : 'Le tirage a échoué.' }
@@ -102,7 +114,7 @@ async function lancer() {
     </div>
     <p v-if="nomFichier">Fichier choisi : {{ nomFichier }}</p>
 
-    <div class="champ" data-testid="adresse-gmail">
+    <div v-if="demanderIdentifiantsGmail" class="champ" data-testid="adresse-gmail">
       <label for="adresse-gmail">Ton adresse Gmail (obligatoire)</label>
       <BulleNoelle id-texte="adresse-gmail-aide">
         C'est de cette adresse que partiront mes mails. Tu les retrouveras dans son dossier « Envoyés ».
@@ -121,7 +133,7 @@ async function lancer() {
       </p>
     </div>
 
-    <div class="champ" data-testid="mot-de-passe-application">
+    <div v-if="demanderIdentifiantsGmail" class="champ" data-testid="mot-de-passe-application">
       <label for="mot-de-passe-application">Ton mot de passe d'application Gmail (obligatoire)</label>
       <BulleNoelle id-texte="mot-de-passe-application-aide">
         Ce n'est pas ton mot de passe Gmail habituel. Promis, je ne le garde jamais !
@@ -142,7 +154,7 @@ async function lancer() {
       </p>
     </div>
 
-    <details id="aide-mot-de-passe">
+    <details v-if="demanderIdentifiantsGmail" id="aide-mot-de-passe">
       <summary>Noëlle t'explique : comment obtenir un mot de passe d'application ?</summary>
       <ol>
         <li>Active la validation en deux étapes sur ton compte Google.</li>
