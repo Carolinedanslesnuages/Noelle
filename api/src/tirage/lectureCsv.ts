@@ -60,29 +60,47 @@ function decouperEnLignes(texte: string, separateur: string): string[][] {
   return lignes;
 }
 
+const TITRES_NOM = ['nom', 'prénom', 'prenom', 'nom et prénom', 'prénom et nom', 'nom complet'];
+const TITRES_EMAIL = ['email', 'e-mail', 'mail', 'courriel', 'adresse e-mail', 'adresse email', 'adresse mail', 'adresse électronique'];
+/** Colonnes ajoutées par Google Forms qui ne sont pas des questions. */
+const TITRES_IGNORES = ['horodateur', 'timestamp', 'horodatage'];
+
+/** Sans colonne « nom » (export Google Forms) : « line.robillard@… » devient « Line Robillard ». */
+export function nomDepuisEmail(email: string): string {
+  const partieLocale = email.split('@')[0] ?? '';
+  return partieLocale
+    .split(/[._-]+/)
+    .filter((morceau) => morceau !== '')
+    .map((morceau) => morceau.charAt(0).toUpperCase() + morceau.slice(1))
+    .join(' ');
+}
+
 /**
- * Lit le CSV des participants : colonnes « nom » et « email » obligatoires, toutes les autres
- * colonnes sont les questions du questionnaire. Aucun nom ni email n'apparaît dans les erreurs.
+ * Lit le CSV des participants : une colonne d'email obligatoire (« email », « Adresse e-mail »…),
+ * une colonne « nom » facultative (sinon le nom est tiré de l'email), une colonne « Horodateur »
+ * ignorée ; toutes les autres colonnes sont les questions du questionnaire.
+ * Aucun nom ni email n'apparaît dans les erreurs.
  */
 export function lireCsvParticipants(contenu: string): LectureCsv {
-  const texte = contenu.replace(/^﻿/, '');
+  const texte = contenu.replace(/^\uFEFF/, '');
   const separateur = detecterSeparateur(texte.split(/\r?\n/, 1)[0] ?? '');
   const lignes = decouperEnLignes(texte, separateur);
   const enTete = (lignes[0] ?? []).map((titre) => titre.trim());
-  const colonneNom = enTete.findIndex((titre) => titre.toLowerCase() === 'nom');
-  const colonneEmail = enTete.findIndex((titre) => ['email', 'e-mail', 'mail', 'courriel'].includes(titre.toLowerCase()));
-  if (colonneNom === -1 || colonneEmail === -1) {
-    return { erreur: 'Le fichier doit avoir une première ligne avec les colonnes « nom » et « email ».' };
+  const titresMinuscules = enTete.map((titre) => titre.toLowerCase());
+  const colonneNom = titresMinuscules.findIndex((titre) => TITRES_NOM.includes(titre));
+  const colonneEmail = titresMinuscules.findIndex((titre) => TITRES_EMAIL.includes(titre));
+  if (colonneEmail === -1) {
+    return { erreur: 'Le fichier doit avoir une première ligne avec une colonne « email » (ou « Adresse e-mail »).' };
   }
 
   const participants: Participant[] = [];
   const emailsDejaVus = new Set<string>();
   for (const [indexLigne, cellules] of lignes.slice(1).entries()) {
     const numeroLigne = indexLigne + 2;
-    const nom = (cellules[colonneNom] ?? '').trim();
     const email = (cellules[colonneEmail] ?? '').trim();
-    if (nom === '') return { erreur: `Ligne ${numeroLigne} : le nom est vide.` };
+    const nom = colonneNom === -1 ? nomDepuisEmail(email) : (cellules[colonneNom] ?? '').trim();
     if (!MOTIF_EMAIL.test(email)) return { erreur: `Ligne ${numeroLigne} : l'email n'est pas valide.` };
+    if (nom === '') return { erreur: `Ligne ${numeroLigne} : le nom est vide.` };
     const emailNormalise = email.toLowerCase();
     if (emailsDejaVus.has(emailNormalise)) return { erreur: `Ligne ${numeroLigne} : cet email apparaît déjà plus haut.` };
     emailsDejaVus.add(emailNormalise);
@@ -90,6 +108,7 @@ export function lireCsvParticipants(contenu: string): LectureCsv {
     const reponses: ReponseQuestionnaire[] = [];
     for (const [indexColonne, question] of enTete.entries()) {
       if (indexColonne === colonneNom || indexColonne === colonneEmail || question === '') continue;
+      if (TITRES_IGNORES.includes(question.toLowerCase())) continue;
       const reponse = (cellules[indexColonne] ?? '').trim();
       if (reponse !== '') reponses.push({ question, reponse });
     }

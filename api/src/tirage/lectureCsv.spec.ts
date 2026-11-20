@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lireCsvParticipants } from './lectureCsv.ts';
+import { lireCsvParticipants, nomDepuisEmail } from './lectureCsv.ts';
 
 const CSV_VALIDE = ['nom,email,Couleur préférée,Allergies', 'Alice,alice@example.org,Bleu,Noix', 'Bob,bob@example.org,Vert,', 'Chloé,chloe@example.org,"Rouge, orangé",'].join('\n');
 
@@ -33,11 +33,36 @@ describe('lecture du CSV des participants', () => {
     expect(lecture.erreur).toBe('Il faut au moins 3 participants dans le fichier.');
   });
 
-  it('refuse un fichier sans colonnes nom et email', () => {
-    expect(lireCsvParticipants('prenom,courriel2\nA,b').erreur).toContain('« nom » et « email »');
+  it('refuse un fichier sans colonne email', () => {
+    expect(lireCsvParticipants('prenom,courriel2\nA,b').erreur).toContain('« email »');
   });
 
   it('refuse un nom vide', () => {
     expect(lireCsvParticipants('nom,email\n,a@example.org\nB,b@example.org\nC,c@example.org').erreur).toBe('Ligne 2 : le nom est vide.');
+  });
+  it('lit l’export Google Forms : « Adresse e-mail », sans nom, horodateur ignoré', () => {
+    const csv = [
+      'Horodateur,Adresse e-mail,📚 Quel est ton livre ou ton film préféré ?,"🎁 Préfères-tu les cadeaux pratiques, décoratifs ou ludiques ?"',
+      '04/12/2025 19:41:08,alice.martin@example.org,Mr Nobody,Pratique ou Ludique',
+      '04/12/2025 19:42:10,bob@example.org,"Le Seigneur des anneaux, tome 1",',
+      '04/12/2025 19:43:00,chloe-dupont@example.org,,Décoratifs',
+    ].join('\n');
+    expect(lireCsvParticipants(csv).participants).toEqual([
+      {
+        nom: 'Alice Martin',
+        email: 'alice.martin@example.org',
+        reponses: [
+          { question: '📚 Quel est ton livre ou ton film préféré ?', reponse: 'Mr Nobody' },
+          { question: '🎁 Préfères-tu les cadeaux pratiques, décoratifs ou ludiques ?', reponse: 'Pratique ou Ludique' },
+        ],
+      },
+      { nom: 'Bob', email: 'bob@example.org', reponses: [{ question: '📚 Quel est ton livre ou ton film préféré ?', reponse: 'Le Seigneur des anneaux, tome 1' }] },
+      { nom: 'Chloe Dupont', email: 'chloe-dupont@example.org', reponses: [{ question: '🎁 Préfères-tu les cadeaux pratiques, décoratifs ou ludiques ?', reponse: 'Décoratifs' }] },
+    ]);
+  });
+
+  it('tire le nom de l’email quand il n’y a pas de colonne nom', () => {
+    expect(nomDepuisEmail('line.robillard@example.org')).toBe('Line Robillard');
+    expect(nomDepuisEmail('jean_paul-dupont@example.org')).toBe('Jean Paul Dupont');
   });
 });
