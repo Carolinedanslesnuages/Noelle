@@ -12,21 +12,23 @@ interface DemandeTirage {
   contenuCsv: string;
 }
 
-function lireDemande(corps: unknown): DemandeTirage | { erreur: string } {
+function lireDemande(corps: unknown, identifiantsGmailRequis: boolean): DemandeTirage | { erreur: string } {
   const valeurs = typeof corps === 'object' && corps !== null ? (corps as Record<string, unknown>) : {};
   const { expediteur, motDePasseApplication, contenuCsv } = valeurs;
-  if (typeof expediteur !== 'string' || !MOTIF_GMAIL.test(expediteur.trim())) {
-    return { erreur: 'Saisissez une adresse Gmail valide (finissant par @gmail.com).' };
-  }
-  if (typeof motDePasseApplication !== 'string' || motDePasseApplication.replace(/\s/g, '') === '') {
-    return { erreur: "Saisissez le mot de passe d'application Gmail." };
+  if (identifiantsGmailRequis) {
+    if (typeof expediteur !== 'string' || !MOTIF_GMAIL.test(expediteur.trim())) {
+      return { erreur: 'Saisissez une adresse Gmail valide (finissant par @gmail.com).' };
+    }
+    if (typeof motDePasseApplication !== 'string' || motDePasseApplication.replace(/\s/g, '') === '') {
+      return { erreur: "Saisissez le mot de passe d'application Gmail." };
+    }
   }
   if (typeof contenuCsv !== 'string' || contenuCsv.trim() === '') {
     return { erreur: 'Importez le fichier CSV des participants.' };
   }
   return {
-    expediteur: expediteur.trim(),
-    motDePasseApplication: motDePasseApplication.replace(/\s/g, ''),
+    expediteur: typeof expediteur === 'string' ? expediteur.trim() : '',
+    motDePasseApplication: typeof motDePasseApplication === 'string' ? motDePasseApplication.replace(/\s/g, '') : '',
     contenuCsv,
   };
 }
@@ -35,11 +37,16 @@ function lireDemande(corps: unknown): DemandeTirage | { erreur: string } {
  * POST /api/tirage : lit le CSV, tire au sort, envoie un mail par participant.
  * Ni le mot de passe ni le résultat du tirage ne sont conservés, affichés ou journalisés.
  */
-export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi): Router {
+export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identifiantsGmailRequis = true): Router {
   const route = Router();
 
+  // L'écran demande s'il doit afficher l'adresse Gmail et le mot de passe d'application.
+  route.get('/tirage/configuration', (_requete, reponse) => {
+    reponse.json({ identifiantsGmailRequis });
+  });
+
   route.post('/tirage', async (requete, reponse) => {
-    const demande = lireDemande(requete.body);
+    const demande = lireDemande(requete.body, identifiantsGmailRequis);
     if ('erreur' in demande) {
       reponse.status(400).json({ erreur: demande.erreur });
       return;
@@ -57,7 +64,7 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi): Router
     } catch (erreur) {
       if (erreur instanceof ConnexionRefuseeError) {
         reponse.status(401).json({
-          erreur: "Gmail a refusé la connexion. Vérifiez l'adresse et le mot de passe d'application. Aucun mail n'est parti.",
+          erreur: "Gmail a refusé la connexion. Vérifiez les identifiants d'envoi. Aucun mail n'est parti.",
         });
         return;
       }

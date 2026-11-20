@@ -24,8 +24,21 @@ async function remplirFormulaire(page: VueWrapper, expediteur = 'orga@gmail.com'
   await page.find(CHAMP_MOT_DE_PASSE).setValue(motDePasse)
 }
 
+let reponseTirage: () => Response
+let identifiantsRequis = true
+const appelsTirage = () => vi.mocked(fetch).mock.calls.filter(([adresse]) => adresse === '/api/tirage')
+
 beforeEach(() => {
-  vi.stubGlobal('fetch', vi.fn())
+  identifiantsRequis = true
+  reponseTirage = () => new Response('{}', { status: 500 })
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (adresse: string) =>
+      adresse === '/api/tirage/configuration'
+        ? new Response(JSON.stringify({ identifiantsGmailRequis: identifiantsRequis }), { status: 200 })
+        : reponseTirage(),
+    ),
+  )
 })
 afterEach(() => {
   wrapper.unmount()
@@ -45,21 +58,21 @@ describe('Écran du tirage', () => {
   })
 
   it('envoie le CSV et affiche seulement le nombre de mails envoyés', async () => {
-    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 }))
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
     const page = monter()
     await remplirFormulaire(page)
     await page.find('form').trigger('submit')
     await flushPromises()
 
     expect(page.find('[role="status"]').text()).toContain('Tirage fait, 3 mails envoyés.')
-    const corps = JSON.parse(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)) as Record<string, string>
+    const corps = JSON.parse(String(appelsTirage()[0]?.[1]?.body)) as Record<string, string>
     expect(corps.contenuCsv).toBe(CSV)
     expect(corps.expediteur).toBe('orga@gmail.com')
     expect(page.text()).not.toContain('Alice')
   })
 
   it('efface le mot de passe saisi après l’envoi', async () => {
-    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 }))
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
     const page = monter()
     await remplirFormulaire(page)
     await page.find('form').trigger('submit')
@@ -68,7 +81,7 @@ describe('Écran du tirage', () => {
   })
 
   it('indique N mails sur M quand certains échouent', async () => {
-    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ mailsEnvoyes: 2, mailsTotal: 3 }), { status: 200 }))
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 2, mailsTotal: 3 }), { status: 200 })
     const page = monter()
     await remplirFormulaire(page)
     await page.find('form').trigger('submit')
@@ -80,7 +93,7 @@ describe('Écran du tirage', () => {
     const page = monter()
     await page.find('form').trigger('submit')
     await flushPromises()
-    expect(fetch).not.toHaveBeenCalled()
+    expect(appelsTirage()).toHaveLength(0)
     expect(page.text()).toContain('Importez le fichier CSV des participants.')
     expect(page.text()).toContain('Saisissez une adresse Gmail valide')
     expect(page.text()).toContain("Saisissez le mot de passe d'application Gmail.")
@@ -88,14 +101,33 @@ describe('Écran du tirage', () => {
   })
 
   it('affiche le message clair de l’API quand Gmail refuse la connexion', async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      new Response(JSON.stringify({ erreur: "Gmail a refusé la connexion. Aucun mail n'est parti." }), { status: 401 }),
-    )
+    reponseTirage = () =>
+      new Response(JSON.stringify({ erreur: "Gmail a refusé la connexion. Aucun mail n'est parti." }), { status: 401 })
     const page = monter()
     await remplirFormulaire(page)
     await page.find('form').trigger('submit')
     await flushPromises()
     expect(page.find('[role="alert"]').text()).toContain("Aucun mail n'est parti")
+  })
+
+  it('sur Vercel (envoi par l’API Gmail), n’affiche ni adresse ni mot de passe et envoie seulement le CSV', async () => {
+    identifiantsRequis = false
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
+    const page = monter()
+    await flushPromises()
+    expect(page.find(CHAMP_ADRESSE).exists()).toBe(false)
+    expect(page.find(CHAMP_MOT_DE_PASSE).exists()).toBe(false)
+
+    const fichier = new File([CSV], 'participants.csv', { type: 'text/csv' })
+    const champFichier = page.find('input[type="file"]')
+    Object.defineProperty(champFichier.element, 'files', { value: [fichier], configurable: true })
+    await champFichier.trigger('change')
+    await flushPromises()
+    await page.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(JSON.parse(String(appelsTirage()[0]?.[1]?.body))).toEqual({ contenuCsv: CSV })
+    expect(page.find('[role="status"]').text()).toContain('3 mails envoyés')
   })
 
   it('aucune violation d’accessibilité automatique', async () => {

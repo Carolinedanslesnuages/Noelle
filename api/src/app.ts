@@ -3,6 +3,10 @@ import type { DatabaseSync } from 'node:sqlite';
 import { lireVersion } from './version.ts';
 import { creerRouteTirage } from './routes/tirage.ts';
 import { ouvrirSessionGmail, type OuvrirSessionEnvoi } from './tirage/envoiGmail.ts';
+import { creerOuvertureSessionGmailApi, lireConfigurationGmailApi } from './tirage/envoiGmailApi.ts';
+
+// Si les réglages de l'API Gmail sont fournis (Vercel), l'envoi passe par HTTPS ; sinon par le SMTP.
+const configurationGmailApi = lireConfigurationGmailApi(process.env);
 
 /**
  * L'application Express : routes sous /api, réponses JSON. Une route par fichier
@@ -10,12 +14,15 @@ import { ouvrirSessionGmail, type OuvrirSessionEnvoi } from './tirage/envoiGmail
  */
 export function creerApp(
   base: DatabaseSync | undefined,
-  ouvrirSessionEnvoi: OuvrirSessionEnvoi = ouvrirSessionGmail,
+  ouvrirSessionEnvoi: OuvrirSessionEnvoi = configurationGmailApi
+    ? creerOuvertureSessionGmailApi(configurationGmailApi)
+    : ouvrirSessionGmail,
+  identifiantsGmailRequis: boolean = configurationGmailApi === undefined,
 ): Express {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
-  app.use('/api', creerRouteTirage(ouvrirSessionEnvoi));
+  app.use('/api', creerRouteTirage(ouvrirSessionEnvoi, identifiantsGmailRequis));
 
   app.get(['/__version__', '/api/__version__'], (_requete, reponse) => {
     reponse.set('Cache-Control', 'no-store').json(lireVersion());
