@@ -1,8 +1,8 @@
 import { creerApp } from './app.ts';
-import { ouvrirBase } from './base.ts';
 
 /**
  * Point d'entrée pour l'hébergement Vercel : l'application est exportée, pas démarrée.
- * Le disque y est en lecture seule : la base reste en mémoire (le tirage n'y stocke rien).
+ * Le tirage ne stocke rien : aucune base ni fichier de migration n'est ouvert ici
+ * (le disque y est en lecture seule et les fichiers SQL n'y sont pas déployés).
  */
-export default creerApp(ouvrirBase(':memory:'));
+export default creerApp(undefined);
