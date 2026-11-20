@@ -38,9 +38,10 @@ describe('Écran du tirage', () => {
     expect(page.findAll('h1')).toHaveLength(1)
     expect(page.find('h1').text()).toContain('Tirage au sort')
     expect(page.find('[data-testid="adresse-gmail"] label').text()).toContain('adresse Gmail')
-    expect(page.find('[data-testid="mot-de-passe-application"] label').text()).toContain('Mot de passe')
+    expect(page.find('[data-testid="mot-de-passe-application"] label').text()).toContain("mot de passe d'application")
     expect(page.find(CHAMP_MOT_DE_PASSE).attributes('type')).toBe('password')
-    expect(page.text()).toContain("Comment obtenir un mot de passe d'application")
+    expect(page.text()).toContain("comment obtenir un mot de passe d'application")
+    expect(page.text()).toContain("Salut, moi c'est Noëlle")
   })
 
   it('envoie le CSV et affiche seulement le nombre de mails envoyés', async () => {

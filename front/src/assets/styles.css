@@ -144,11 +144,6 @@ h1 {
 h2 {
   color: var(--rouge-noel);
 }
-.intro-noel {
-  margin-top: 0;
-  color: var(--vert-noel);
-  font-size: 1.05rem;
-}
 
 form {
   counter-reset: etape;
