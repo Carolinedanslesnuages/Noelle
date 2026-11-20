@@ -42,6 +42,17 @@ describe('construireMessageBrut', () => {
     const corps = message.split('\r\n\r\n')[1] ?? '';
     expect(Buffer.from(corps, 'base64').toString('utf-8')).toBe(MAIL.texte);
   });
+
+  it('envoie le texte et le HTML en deux versions quand le mail a du HTML', () => {
+    const avecHtml = { ...MAIL, html: '<p>Tu dois gâter : <strong>Bob</strong>.</p>' };
+    const message = Buffer.from(construireMessageBrut('organisatrice@gmail.com', avecHtml), 'base64url').toString('utf-8');
+    expect(message).toContain('Content-Type: multipart/alternative; boundary="noelle-');
+    const parties = message.split(/\r\n--noelle-[^\r\n]+/).slice(1, 3);
+    const contenus = parties.map((partie) => Buffer.from(partie.split('\r\n\r\n')[1] ?? '', 'base64').toString('utf-8'));
+    expect(parties[0]).toContain('text/plain');
+    expect(parties[1]).toContain('text/html');
+    expect(contenus).toEqual([MAIL.texte, avecHtml.html]);
+  });
 });
 
 describe('creerOuvertureSessionGmailApi', () => {
