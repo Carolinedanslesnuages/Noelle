@@ -1,0 +1,123 @@
+:root {
+  --texte: #1a1a1a;
+  --fond: #ffffff;
+  --accent: #1d4ed8;
+  --erreur: #b42318;
+  --succes: #166534;
+  --bordure: #595959;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: var(--texte);
+  background: var(--fond);
+}
+
+.lien-evitement {
+  position: absolute;
+  left: 0.5rem;
+  top: -4rem;
+  padding: 0.5rem 1rem;
+  background: var(--fond);
+  color: var(--accent);
+}
+.lien-evitement:focus {
+  top: 0.5rem;
+}
+
+.entete,
+.pied {
+  padding: 1rem;
+  border-bottom: 1px solid var(--bordure);
+}
+.pied {
+  border-top: 1px solid var(--bordure);
+  border-bottom: 0;
+}
+
+.contenu {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.champ {
+  margin-bottom: 1.25rem;
+}
+.champ label {
+  display: block;
+  font-weight: bold;
+}
+.champ .aide {
+  display: block;
+  color: var(--texte);
+  font-size: 0.875rem;
+}
+.champ input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid var(--bordure);
+  font: inherit;
+}
+.champ .message-erreur {
+  margin: 0.25rem 0 0;
+  color: var(--erreur);
+}
+.champ .message-erreur::before {
+  content: 'Erreur : ';
+  font-weight: bold;
+}
+
+button,
+a,
+input,
+summary {
+  outline-offset: 2px;
+}
+:focus-visible {
+  outline: 3px solid var(--accent);
+}
+
+button[type='submit'] {
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+button[type='submit']:disabled {
+  background: #595959;
+  border-color: #595959;
+  cursor: not-allowed;
+}
+
+.message {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 2px solid;
+}
+.message-succes {
+  border-color: var(--succes);
+  color: var(--succes);
+}
+.message-erreur-general {
+  border-color: var(--erreur);
+  color: var(--erreur);
+}
+.message p {
+  margin: 0;
+}
+
+details {
+  margin: 1rem 0;
+}
+summary {
+  cursor: pointer;
+  font-weight: bold;
+}

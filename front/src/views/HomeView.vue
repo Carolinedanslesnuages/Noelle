@@ -61,66 +61,90 @@ async function lancer() {
   <h1>Tirage au sort du Secret Santa</h1>
 
   <div role="status">
-    <DsfrAlert v-if="resultat" type="success" title="Tirage terminé" :description="messageResultat" />
+    <div v-if="resultat" class="message message-succes">
+      <p><strong>Tirage terminé.</strong> {{ messageResultat }}</p>
+    </div>
   </div>
   <div role="alert">
-    <DsfrAlert v-if="erreurs.general" type="error" title="Le tirage n'a pas pu être fait" :description="erreurs.general" />
+    <div v-if="erreurs.general" class="message message-erreur-general">
+      <p><strong>Le tirage n'a pas pu être fait.</strong> {{ erreurs.general }}</p>
+    </div>
   </div>
 
   <p>Tous les champs sont obligatoires.</p>
 
   <form novalidate @submit.prevent="lancer">
-    <DsfrFileUpload
-      id="fichier-participants"
-      label="Fichier CSV des participants (obligatoire)"
-      hint="Colonnes « nom » et « email », puis une colonne par question du questionnaire. Au moins 3 participants."
-      accept=".csv,text/csv"
-      :error="erreurs.fichier"
-      @change="choisirFichier"
-    />
+    <div class="champ" data-testid="fichier-participants">
+      <label for="fichier-participants">Fichier CSV des participants (obligatoire)</label>
+      <span id="fichier-participants-aide" class="aide">
+        Colonnes « nom » et « email », puis une colonne par question du questionnaire. Au moins 3 participants.
+      </span>
+      <input
+        id="fichier-participants"
+        type="file"
+        accept=".csv,text/csv"
+        required
+        :aria-invalid="erreurs.fichier ? 'true' : undefined"
+        :aria-describedby="erreurs.fichier ? 'fichier-participants-aide fichier-participants-erreur' : 'fichier-participants-aide'"
+        @change="choisirFichier(($event.target as HTMLInputElement).files!)"
+      />
+      <p v-if="erreurs.fichier" id="fichier-participants-erreur" class="message-erreur" role="alert">
+        {{ erreurs.fichier }}
+      </p>
+    </div>
     <p v-if="nomFichier">Fichier choisi : {{ nomFichier }}</p>
 
-    <DsfrInputGroup
-      v-model="expediteur"
-      input-group-id="adresse-gmail"
-      label="Votre adresse Gmail (obligatoire)"
-      hint="Les mails partiront de cette adresse. Ils resteront visibles dans son dossier « Envoyés »."
-      type="email"
-      autocomplete="email"
-      required
-      :error-message="erreurs.expediteur"
-      label-visible
-    />
+    <div class="champ" data-testid="adresse-gmail">
+      <label for="adresse-gmail">Votre adresse Gmail (obligatoire)</label>
+      <span id="adresse-gmail-aide" class="aide">
+        Les mails partiront de cette adresse. Ils resteront visibles dans son dossier « Envoyés ».
+      </span>
+      <input
+        id="adresse-gmail"
+        v-model="expediteur"
+        type="email"
+        autocomplete="email"
+        required
+        :aria-invalid="erreurs.expediteur ? 'true' : undefined"
+        :aria-describedby="erreurs.expediteur ? 'adresse-gmail-aide adresse-gmail-erreur' : 'adresse-gmail-aide'"
+      />
+      <p v-if="erreurs.expediteur" id="adresse-gmail-erreur" class="message-erreur" role="alert">
+        {{ erreurs.expediteur }}
+      </p>
+    </div>
 
-    <DsfrInputGroup
-      v-model="motDePasseApplication"
-      input-group-id="mot-de-passe-application"
-      label="Mot de passe d'application Gmail (obligatoire)"
-      hint="Ce n'est pas votre mot de passe Gmail habituel. Il n'est jamais enregistré."
-      type="password"
-      autocomplete="off"
-      required
-      :error-message="erreurs.motDePasse"
-      label-visible
-    />
+    <div class="champ" data-testid="mot-de-passe-application">
+      <label for="mot-de-passe-application">Mot de passe d'application Gmail (obligatoire)</label>
+      <span id="mot-de-passe-application-aide" class="aide">
+        Ce n'est pas votre mot de passe Gmail habituel. Il n'est jamais enregistré.
+      </span>
+      <input
+        id="mot-de-passe-application"
+        v-model="motDePasseApplication"
+        type="password"
+        autocomplete="off"
+        required
+        :aria-invalid="erreurs.motDePasse ? 'true' : undefined"
+        :aria-describedby="
+          erreurs.motDePasse ? 'mot-de-passe-application-aide mot-de-passe-application-erreur' : 'mot-de-passe-application-aide'
+        "
+      />
+      <p v-if="erreurs.motDePasse" id="mot-de-passe-application-erreur" class="message-erreur" role="alert">
+        {{ erreurs.motDePasse }}
+      </p>
+    </div>
 
-    <DsfrAccordionsGroup>
-      <DsfrAccordion id="aide-mot-de-passe" title="Comment obtenir un mot de passe d'application ?">
-        <ol>
-          <li>Activez la validation en deux étapes sur votre compte Google.</li>
-          <li>Dans votre compte Google, cherchez « Mots de passe des applications ».</li>
-          <li>Créez-en un, nommé par exemple « Secret Santa ».</li>
-          <li>Copiez les 16 caractères obtenus dans le champ ci-dessus.</li>
-        </ol>
-      </DsfrAccordion>
-    </DsfrAccordionsGroup>
+    <details id="aide-mot-de-passe">
+      <summary>Comment obtenir un mot de passe d'application ?</summary>
+      <ol>
+        <li>Activez la validation en deux étapes sur votre compte Google.</li>
+        <li>Dans votre compte Google, cherchez « Mots de passe des applications ».</li>
+        <li>Créez-en un, nommé par exemple « Secret Santa ».</li>
+        <li>Copiez les 16 caractères obtenus dans le champ ci-dessus.</li>
+      </ol>
+    </details>
 
-    <DsfrButton
-      type="submit"
-      label="Lancer le tirage et envoyer les mails"
-      :disabled="enCours"
-      class="fr-mt-3w"
-    />
+    <button type="submit" :disabled="enCours">Lancer le tirage et envoyer les mails</button>
     <p v-if="enCours" role="status">Envoi des mails en cours…</p>
   </form>
 </template>
