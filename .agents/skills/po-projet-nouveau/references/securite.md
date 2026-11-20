@@ -57,8 +57,8 @@ Pas d'action GitHub `gitleaks-action` : payante pour les organisations, elle éc
 
 ## 3 bis. Faux positif connu (stacks NestJS)
 
-Le `README.md` généré par `nest new` contient un badge d'exemple `token=abc123def456` que
-gitleaks prend pour un secret. Remplacer ce README par un vrai (objectif + commandes), et poser
+Le `README.md` généré par `nest new` contient un badge avec une valeur d'exemple que gitleaks
+prend pour un secret. Remplacer ce README par un vrai (objectif + commandes), et poser
 à la racine `.gitleaks.toml` (lu automatiquement par gitleaks), car l'historique le contient :
 ```toml
 [extend]
