@@ -1,5 +1,6 @@
 {
   "type": "service",
+  "edition": "studio",
   "personnaliser": [
     "PROJET.md",
     "README.md",
