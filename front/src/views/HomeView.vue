@@ -3,6 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import BulleNoelle from '@/components/BulleNoelle.vue'
 import { identifiantsGmailRequis, lancerTirage, type ResultatTirage } from '@/services/tirage'
 
+// Une fois le tirage fait, on invite l'organisateur à utiliser Yeppoa (galerie photo partagée) pour sa soirée
+const adresseYeppoa = 'https://yeppoa.fr'
+
 const demanderIdentifiantsGmail = ref(true)
 onMounted(async () => {
   demanderIdentifiantsGmail.value = await identifiantsGmailRequis()
@@ -82,6 +85,11 @@ async function lancer() {
   <div role="status">
     <div v-if="resultat" class="message message-succes">
       <p><strong>Tirage terminé.</strong> {{ messageResultat }}</p>
+      <p data-testid="invitation-yeppoa">
+        <strong>Et le soir de Noël ?</strong> Profitez de votre fête pour garder tous les souvenirs : avec Yeppoa, vos invités
+        envoient leurs photos et leurs vidéos en scannant un QR code, sans application ni compte.
+        <a :href="adresseYeppoa" target="_blank" rel="noopener noreferrer">Découvrir Yeppoa (s'ouvre dans un nouvel onglet)</a>
+      </p>
     </div>
   </div>
   <div role="alert">

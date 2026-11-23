@@ -276,6 +276,14 @@ button[type='submit']:disabled {
 .message p {
   margin: 0;
 }
+.message p + p {
+  margin-top: 0.75rem;
+}
+.message a {
+  color: var(--rouge-noel);
+  font-weight: 700;
+  text-decoration: underline;
+}
 
 details {
   margin: 1rem 0 1.5rem;
