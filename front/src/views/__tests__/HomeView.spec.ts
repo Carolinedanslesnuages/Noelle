@@ -130,6 +130,35 @@ describe('Écran du tirage', () => {
     expect(page.find('[role="status"]').text()).toContain('3 mails envoyés')
   })
 
+  it('une fois le tirage fait, invite à découvrir Yeppoa avec un lien accessible (et pas avant)', async () => {
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
+    const page = monter()
+    expect(page.find('[data-testid="invitation-yeppoa"]').exists()).toBe(false)
+
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+
+    const invitation = page.find('[data-testid="invitation-yeppoa"]')
+    expect(invitation.text()).toContain('Et le soir de Noël ?')
+    const lien = invitation.find('a')
+    expect(lien.attributes('href')).toBe('https://yeppoa.fr')
+    expect(lien.attributes('target')).toBe('_blank')
+    expect(lien.attributes('rel')).toContain('noopener')
+    expect(lien.text()).toContain('nouvel onglet') // un lien qui ouvre une nouvelle fenêtre le dit
+    expect(page.find('[role="status"]').text()).toContain('Yeppoa')
+    expect(await violationsAccessibilite(document.body)).toEqual([])
+  })
+
+  it("n'invite pas à découvrir Yeppoa quand le tirage échoue", async () => {
+    reponseTirage = () => new Response(JSON.stringify({ erreur: 'Échec.' }), { status: 500 })
+    const page = monter()
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+    expect(page.find('[data-testid="invitation-yeppoa"]').exists()).toBe(false)
+  })
+
   it('aucune violation d’accessibilité automatique', async () => {
     monter()
     expect(await violationsAccessibilite(document.body)).toEqual([])
