@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import BulleNoelle from '@/components/BulleNoelle.vue'
+import LutineEnPied from '@/components/LutineEnPied.vue'
 import { identifiantsGmailRequis, lancerTirage, type ResultatTirage } from '@/services/tirage'
 
 // Une fois le tirage fait, on invite l'organisateur à utiliser Yeppoa (galerie photo partagée) pour sa soirée
@@ -98,7 +99,8 @@ async function lancer() {
     </p>
   </BulleNoelle>
 
-  <div role="status">
+  <div role="status" :class="{ 'resultat-tirage': resultat }">
+    <LutineEnPied v-if="resultat" />
     <div v-if="resultat" ref="blocSucces" tabindex="-1" class="message message-succes" data-testid="resultat-tirage">
       <p><strong>Tirage terminé.</strong> {{ messageResultat }}</p>
       <p data-testid="invitation-yeppoa">
