@@ -4,6 +4,7 @@ import { creerApp } from '../src/app.ts';
 import { ouvrirBase } from '../src/base.ts';
 import { ConnexionRefuseeError, GmailInjoignableError, type OuvrirSessionEnvoi } from '../src/tirage/envoiGmail.ts';
 import type { MailAEnvoyer } from '../src/tirage/messageMail.ts';
+import type { StatistiquesTirage } from '../src/notification/notificationDiscord.ts';
 
 const CSV = ['nom,email,Couleur préférée', 'Alice,alice@example.org,Bleu', 'Bob,bob@example.org,Vert', 'Chloé,chloe@example.org,Rouge', 'David,david@example.org,Jaune'].join('\n');
 const MOT_DE_PASSE = 'abcd efgh ijkl mnop';
@@ -107,3 +108,62 @@ describe('POST /api/tirage', () => {
     journal.mockRestore();
   });
 });
+
+describe('Notification Discord après un tirage', () => {
+  function creerAppAvecNotification(echecsPour: string[] = []) {
+    const notifierTirage = vi.fn<(statistiques: StatistiquesTirage) => void>();
+    const ouvrirSession: OuvrirSessionEnvoi = async () => ({
+      async envoyer(mail: MailAEnvoyer) {
+        if (echecsPour.includes(mail.destinataire)) throw new Error('refusé');
+      },
+    });
+    return { app: creerApp(ouvrirBase(':memory:'), ouvrirSession, true, notifierTirage), notifierTirage };
+  }
+
+  it('prévient une fois, avec les chiffres du tirage et l’état du serveur', async () => {
+    const { app, notifierTirage } = creerAppAvecNotification();
+    await request(app).post('/api/tirage').send(DEMANDE).expect(200);
+    expect(notifierTirage).toHaveBeenCalledTimes(1);
+    const statistiques = notifierTirage.mock.calls[0]?.[0];
+    expect(statistiques).toMatchObject({ participants: 4, mailsEnvoyes: 4 });
+    expect(statistiques?.dureeMillisecondes).toBeGreaterThanOrEqual(0);
+    expect(statistiques?.serveur.nombreCoeurs).toBeGreaterThan(0);
+    expect(statistiques?.serveur.memoireTotaleMo).toBeGreaterThan(0);
+  });
+
+  it('compte les mails qui ont échoué, sans nom', async () => {
+    const { app, notifierTirage } = creerAppAvecNotification(['bob@example.org']);
+    await request(app).post('/api/tirage').send(DEMANDE).expect(200);
+    expect(notifierTirage.mock.calls[0]?.[0]).toMatchObject({ participants: 4, mailsEnvoyes: 3 });
+  });
+
+  it('ne contient JAMAIS un nom, une adresse, un mot de passe ni une réponse du formulaire', async () => {
+    const { app, notifierTirage } = creerAppAvecNotification();
+    await request(app).post('/api/tirage').send(DEMANDE).expect(200);
+    expect(JSON.stringify(notifierTirage.mock.calls)).not.toMatch(/Alice|Bob|Chloé|David|example\.org|gmail|abcd|Bleu|Vert|Rouge|Jaune/);
+  });
+
+  it("ne prévient pas quand le tirage n'a pas eu lieu (demande invalide, Gmail refuse ou injoignable)", async () => {
+    const { app, notifierTirage } = creerAppAvecNotification();
+    await request(app).post('/api/tirage').send({ ...DEMANDE, contenuCsv: 'nom,email\nA,a@example.org' }).expect(400);
+    const refus: OuvrirSessionEnvoi = async () => {
+      throw new ConnexionRefuseeError();
+    };
+    const injoignable: OuvrirSessionEnvoi = async () => {
+      throw new GmailInjoignableError();
+    };
+    const autreNotification = vi.fn();
+    await request(creerApp(ouvrirBase(':memory:'), refus, true, autreNotification)).post('/api/tirage').send(DEMANDE).expect(401);
+    await request(creerApp(ouvrirBase(':memory:'), injoignable, true, autreNotification)).post('/api/tirage').send(DEMANDE).expect(502);
+    expect(notifierTirage).not.toHaveBeenCalled();
+    expect(autreNotification).not.toHaveBeenCalled();
+  });
+
+  it('un tirage réussit même si la notification est cassée côté Discord (envoi vers une adresse injoignable)', async () => {
+    const journal = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { app } = creerAppAvecNotification();
+    await request(app).post('/api/tirage').send(DEMANDE).expect(200);
+    journal.mockRestore();
+  });
+});
+

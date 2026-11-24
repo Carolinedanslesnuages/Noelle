@@ -4,9 +4,12 @@ import { lireVersion } from './version.ts';
 import { creerRouteTirage } from './routes/tirage.ts';
 import { ouvrirSessionGmail, type OuvrirSessionEnvoi } from './tirage/envoiGmail.ts';
 import { creerOuvertureSessionGmailApi, lireConfigurationGmailApi } from './tirage/envoiGmailApi.ts';
+import { creerNotificationDiscord, lireAdresseWebhookDiscord, type NotifierTirage } from './notification/notificationDiscord.ts';
 
 // Si les réglages de l'API Gmail sont fournis (Vercel), l'envoi passe par HTTPS ; sinon par le SMTP.
 const configurationGmailApi = lireConfigurationGmailApi(process.env);
+// Si DISCORD_WEBHOOK_URL est fournie, chaque tirage terminé envoie un message Discord (chiffres anonymes seulement).
+const notificationDiscord = creerNotificationDiscord(lireAdresseWebhookDiscord(process.env));
 
 /**
  * L'application Express : routes sous /api, réponses JSON. Une route par fichier
@@ -18,11 +21,12 @@ export function creerApp(
     ? creerOuvertureSessionGmailApi(configurationGmailApi)
     : ouvrirSessionGmail,
   identifiantsGmailRequis: boolean = configurationGmailApi === undefined,
+  notifierTirage: NotifierTirage = notificationDiscord,
 ): Express {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
-  app.use('/api', creerRouteTirage(ouvrirSessionEnvoi, identifiantsGmailRequis));
+  app.use('/api', creerRouteTirage(ouvrirSessionEnvoi, identifiantsGmailRequis, notifierTirage));
 
   app.get(['/__version__', '/api/__version__'], (_requete, reponse) => {
     reponse.set('Cache-Control', 'no-store').json(lireVersion());
