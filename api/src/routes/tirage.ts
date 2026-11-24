@@ -3,6 +3,7 @@ import { ConnexionRefuseeError, GmailInjoignableError, type OuvrirSessionEnvoi }
 import { lireCsvParticipants } from '../tirage/lectureCsv.ts';
 import { composerMail } from '../tirage/messageMail.ts';
 import { tirerAuSort } from '../tirage/tirage.ts';
+import { demarrerMesureTirage, type NotifierTirage } from '../notification/notificationDiscord.ts';
 
 const MOTIF_GMAIL = /^[^\s@]+@(gmail\.com|googlemail\.com)$/i;
 
@@ -37,7 +38,11 @@ function lireDemande(corps: unknown, identifiantsGmailRequis: boolean): DemandeT
  * POST /api/tirage : lit le CSV, tire au sort, envoie un mail par participant.
  * Ni le mot de passe ni le résultat du tirage ne sont conservés, affichés ou journalisés.
  */
-export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identifiantsGmailRequis = true): Router {
+export function creerRouteTirage(
+  ouvrirSessionEnvoi: OuvrirSessionEnvoi,
+  identifiantsGmailRequis = true,
+  notifierTirage: NotifierTirage = () => {},
+): Router {
   const route = Router();
 
   // L'écran demande s'il doit afficher l'adresse Gmail et le mot de passe d'application.
@@ -46,6 +51,7 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identif
   });
 
   route.post('/tirage', async (requete, reponse) => {
+    const terminerMesure = demarrerMesureTirage();
     const demande = lireDemande(requete.body, identifiantsGmailRequis);
     if ('erreur' in demande) {
       reponse.status(400).json({ erreur: demande.erreur });
@@ -97,6 +103,8 @@ export function creerRouteTirage(ouvrirSessionEnvoi: OuvrirSessionEnvoi, identif
       }),
     );
     const mailsEnvoyes = envois.filter(Boolean).length;
+    // Seulement des chiffres anonymes (jamais un nom ni une adresse) : voir notification/notificationDiscord.ts.
+    notifierTirage(terminerMesure(participants.length, mailsEnvoyes));
     reponse.json({ mailsEnvoyes, mailsTotal: participants.length });
   });
 
