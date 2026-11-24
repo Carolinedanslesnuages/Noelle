@@ -252,6 +252,23 @@ button[type='submit']:disabled {
   border-color: #5c6b64;
   cursor: not-allowed;
 }
+.bouton-secondaire {
+  padding: 0.7rem 1.5rem;
+  border: 2px solid var(--vert-noel);
+  border-radius: 2rem;
+  background: var(--fond);
+  color: var(--vert-noel);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bouton-secondaire:hover {
+  background: #eef5f0;
+}
+.message:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
 @media (prefers-reduced-motion: reduce) {
   button[type='submit'] {
     transition: none;

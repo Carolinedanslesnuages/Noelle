@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import BulleNoelle from '@/components/BulleNoelle.vue'
 import { identifiantsGmailRequis, lancerTirage, type ResultatTirage } from '@/services/tirage'
 
@@ -18,6 +18,7 @@ const nomFichier = ref('')
 const erreurs = ref<{ fichier?: string; expediteur?: string; motDePasse?: string; general?: string }>({})
 const enCours = ref(false)
 const resultat = ref<ResultatTirage | null>(null)
+const blocSucces = ref<HTMLElement | null>(null)
 
 const messageResultat = computed(() => {
   if (!resultat.value) return ''
@@ -26,6 +27,21 @@ const messageResultat = computed(() => {
     ? `Tirage fait, ${mailsEnvoyes} mails envoyés.`
     : `Tirage fait, ${mailsEnvoyes} mails sur ${mailsTotal} envoyés.`
 })
+
+// Le bouton d'envoi est tout en bas du formulaire : une fois le tirage fait, on ne garde que le message de réussite,
+// et on y place le focus (il est lu par les lecteurs d'écran et la page montre le message).
+watch(resultat, async (nouveauResultat) => {
+  if (nouveauResultat === null) return
+  await nextTick()
+  blocSucces.value?.focus()
+})
+
+function recommencer() {
+  resultat.value = null
+  contenuCsv.value = ''
+  nomFichier.value = ''
+  erreurs.value = {}
+}
 
 async function choisirFichier(fichiers: FileList) {
   const fichier = fichiers[0]
@@ -75,7 +91,7 @@ async function lancer() {
 
 <template>
   <h1>Noëlle — Tirage au sort du Secret Santa</h1>
-  <BulleNoelle grande>
+  <BulleNoelle v-if="!resultat" grande>
     <p>
       <strong>Salut, moi c'est Noëlle !</strong> Je t'aide à faire ton tirage de Noël. Importe tes participants :
       chacun recevra en secret le nom de la personne à gâter.
@@ -83,7 +99,7 @@ async function lancer() {
   </BulleNoelle>
 
   <div role="status">
-    <div v-if="resultat" class="message message-succes">
+    <div v-if="resultat" ref="blocSucces" tabindex="-1" class="message message-succes" data-testid="resultat-tirage">
       <p><strong>Tirage terminé.</strong> {{ messageResultat }}</p>
       <p data-testid="invitation-yeppoa">
         <strong>Et le soir de Noël ?</strong> Profitez de votre fête pour garder tous les souvenirs : avec Yeppoa, vos invités
@@ -92,15 +108,16 @@ async function lancer() {
       </p>
     </div>
   </div>
+  <button v-if="resultat" type="button" class="bouton-secondaire" @click="recommencer">Faire un autre tirage</button>
   <div role="alert">
     <div v-if="erreurs.general" class="message message-erreur-general">
       <p><strong>Le tirage n'a pas pu être fait.</strong> {{ erreurs.general }}</p>
     </div>
   </div>
 
-  <p>Tous les champs sont obligatoires.</p>
+  <p v-if="!resultat">Tous les champs sont obligatoires.</p>
 
-  <form novalidate @submit.prevent="lancer">
+  <form v-if="!resultat" novalidate @submit.prevent="lancer">
     <div class="champ" data-testid="fichier-participants">
       <label for="fichier-participants">Fichier CSV des participants (obligatoire)</label>
       <BulleNoelle id-texte="fichier-participants-aide">
