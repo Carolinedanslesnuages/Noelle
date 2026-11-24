@@ -171,6 +171,33 @@ describe('Écran du tirage', () => {
     expect(await violationsAccessibilite(document.body)).toEqual([])
   })
 
+  it('Noëlle en pied apparaît une fois le tirage fait (décorative), pas avant ni en cas d’échec', async () => {
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
+    const page = monter()
+    expect(page.find('.lutine-en-pied').exists()).toBe(false)
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+
+    const lutine = page.find('.lutine-en-pied')
+    expect(lutine.exists()).toBe(true)
+    expect(lutine.attributes('aria-hidden')).toBe('true')
+    expect(page.find('[data-testid="resultat-tirage"]').text()).not.toContain('lutine') // le message ne dépend pas du dessin
+    expect(await violationsAccessibilite(document.body)).toEqual([])
+
+    await page.find('button.bouton-secondaire').trigger('click')
+    expect(page.find('.lutine-en-pied').exists()).toBe(false)
+  })
+
+  it('pas de Noëlle en pied quand le tirage échoue', async () => {
+    reponseTirage = () => new Response(JSON.stringify({ erreur: 'Échec.' }), { status: 500 })
+    const page = monter()
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+    expect(page.find('.lutine-en-pied').exists()).toBe(false)
+  })
+
   it('« Faire un autre tirage » ramène un formulaire vide', async () => {
     reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
     const page = monter()
