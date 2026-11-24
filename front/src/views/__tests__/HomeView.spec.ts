@@ -77,6 +77,8 @@ describe('Écran du tirage', () => {
     await remplirFormulaire(page)
     await page.find('form').trigger('submit')
     await flushPromises()
+    // Le formulaire disparaît après le tirage : on le fait revenir pour vérifier que le mot de passe n'est pas resté en mémoire
+    await page.find('button.bouton-secondaire').trigger('click')
     expect((page.find(CHAMP_MOT_DE_PASSE).element as HTMLInputElement).value).toBe('')
   })
 
@@ -148,6 +150,50 @@ describe('Écran du tirage', () => {
     expect(lien.text()).toContain('nouvel onglet') // un lien qui ouvre une nouvelle fenêtre le dit
     expect(page.find('[role="status"]').text()).toContain('Yeppoa')
     expect(await violationsAccessibilite(document.body)).toEqual([])
+  })
+
+  it('une fois le tirage fait, ne garde que le message de réussite, avec le focus dessus', async () => {
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
+    const page = monter()
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+
+    // Le bouton d'envoi était tout en bas : plus de formulaire ni d'introduction, pour ne pas rester sans savoir que c'est fait
+    expect(page.find('form').exists()).toBe(false)
+    expect(page.find('input[type="file"]').exists()).toBe(false)
+    expect(page.text()).not.toContain("Salut, moi c'est Noëlle")
+    expect(page.findAll('h1')).toHaveLength(1)
+    const bloc = page.find('[data-testid="resultat-tirage"]')
+    expect(bloc.text()).toContain('Tirage terminé. Tirage fait, 3 mails envoyés.')
+    expect(bloc.text()).toContain('Et le soir de Noël ?')
+    expect(document.activeElement).toBe(bloc.element) // annoncé aux lecteurs d'écran, et la page montre le message
+    expect(await violationsAccessibilite(document.body)).toEqual([])
+  })
+
+  it('« Faire un autre tirage » ramène un formulaire vide', async () => {
+    reponseTirage = () => new Response(JSON.stringify({ mailsEnvoyes: 3, mailsTotal: 3 }), { status: 200 })
+    const page = monter()
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+
+    await page.find('button.bouton-secondaire').trigger('click')
+    expect(page.find('[data-testid="resultat-tirage"]').exists()).toBe(false)
+    expect(page.find('form').exists()).toBe(true)
+    expect(page.text()).not.toContain('Fichier choisi')
+    expect(page.find(CHAMP_MOT_DE_PASSE).element).toHaveProperty('value', '')
+    expect(await violationsAccessibilite(document.body)).toEqual([])
+  })
+
+  it('garde le formulaire à l’écran quand le tirage échoue, pour pouvoir corriger', async () => {
+    reponseTirage = () => new Response(JSON.stringify({ erreur: 'Échec.' }), { status: 500 })
+    const page = monter()
+    await remplirFormulaire(page)
+    await page.find('form').trigger('submit')
+    await flushPromises()
+    expect(page.find('form').exists()).toBe(true)
+    expect(page.find('[data-testid="resultat-tirage"]').exists()).toBe(false)
   })
 
   it("n'invite pas à découvrir Yeppoa quand le tirage échoue", async () => {
